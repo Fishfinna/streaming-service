@@ -3,58 +3,7 @@
     <head>
         <title>Login Page</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <style>
-        body {
-            background-color: #fff;
-            color: #00bcd4;
-            font-family: "Helvetica Neue", sans-serif;
-            height: 100vh;
-            display: flex;
-            align-self: center;
-            justify-self: center;
-            flex-direction: column;
-        }
-
-        .container {
-            background-color: #fff;
-            padding: 20vh 90px;
-            border-radius: 5px;
-            height: 75%;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        .form-group label {
-            color: #00bcd4;
-            font-weight: bold;
-        }
-
-        .form-group input {
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-primary {
-            background-color: #00bcd4;
-            border-color: #00bcd4;
-            font-weight: bold;
-        }
-
-        .btn-primary:hover {
-            background-color: #00e7e7;
-            border-color: #00e7e7;
-        }
-        .alert {
-            display: flex;
-            align-items: space-between;
-            justify-content: space-between;
-        }
-        .btn-danger { 
-            color: black;
-            background-color: transparent;
-            border: none;
-        }
-        </style>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     </head>
     <body>
         {% if error %}

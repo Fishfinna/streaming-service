@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Drag and Drop Video Upload</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <link rel="stylesheet" href="./styles.css">
+    </head>
+    <body>
+        <div class="container mt-5">
+            <h2>Video Upload</h2>
+            <div class="row mt-4">
+                <div class="col-md-6 offset-md-3">
+                    <form action="/upload" method="POST" enctype="multipart/form-data">
+                        <div class="drop-zone" id="dropZone" onclick="openFileDialog()">
+                            <p>Click or drag and drop video files here</p>
+                        </div>
+                        <label for="videos">Select multiple files:</label>
+                        <input
+                            type="file"
+                            id="fileInput"
+                            name="videos"
+                            accept="video/*"
+                            multiple
+                            style="display: none;"
+                        >
+                        <ul class="uploaded-files mt-3" id="fileList"></ul>
+                        <button
+                            class="btn btn-primary"
+                            type="submit"
+                            id="upload"
+                            disabled="true"
+                        >Upload Files</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <script src="./upload.js"></script>
+    </body>
+</html>

@@ -11,7 +11,6 @@ dropZone.addEventListener("dragleave", () => {
   dropZone.classList.remove("dragover");
 });
 
-// Handle file drop
 dropZone.addEventListener("drop", (e) => {
   e.preventDefault();
   dropZone.classList.remove("dragover");
@@ -27,6 +26,7 @@ dropZone.addEventListener("drop", (e) => {
   }
 });
 
+// Event listener for file input change
 fileInput.addEventListener("change", () => {
   const files = fileInput.files;
 
@@ -44,15 +44,20 @@ function openFileDialog() {
 }
 
 function displayFile(file) {
+  const upload_button = document.getElementById("upload");
+  upload_button.disabled = false;
   const listItem = document.createElement("li");
   const deleteButton = document.createElement("span");
 
   listItem.textContent = file.name;
-  deleteButton.innerHTML = "&#10006;";
+  deleteButton.textContent = " ❌";
 
   deleteButton.classList.add("delete-button");
   deleteButton.addEventListener("click", () => {
     listItem.remove();
+    if (!fileList.childElementCount) {
+      upload_button.disabled = true;
+    }
   });
 
   listItem.appendChild(deleteButton);
