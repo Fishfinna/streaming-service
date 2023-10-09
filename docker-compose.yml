@@ -1,11 +1,17 @@
 version: '3.7'
 services:
-  auth:
+  authentication:
     build:
       context: ./auth
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
+  upload:
+    build: 
+      context: ./upload
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
   mysql:
     build:
       context: ./database
