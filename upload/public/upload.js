@@ -62,6 +62,23 @@ function displayFile(file) {
 
   listItem.appendChild(deleteButton);
   fileList.appendChild(listItem);
+  if (!fileAlreadyAdded(file, fileInput)) {
+    const newFileList = new DataTransfer();
+    for (const existingFile of fileInput.files) {
+      newFileList.items.add(existingFile);
+    }
+    newFileList.items.add(file);
+    fileInput.files = newFileList.files;
+  }
+}
+
+function fileAlreadyAdded(file, fileInput) {
+  for (const existingFile of fileInput.files) {
+    if (existingFile.name === file.name && existingFile.size === file.size) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function isVideoFile(file) {

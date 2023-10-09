@@ -6,12 +6,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
-  upload:
-    build: 
-      context: ./upload
-      dockerfile: Dockerfile
-    ports:
-      - "8090:8090"
   mysql:
     build:
       context: ./database
@@ -25,6 +19,19 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+  upload:
+    build: 
+      context: ./upload
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+    environment:
+      DATABASE_HOST: mysql
+      DATABASE_USER: ${MYSQL_USER}
+      DATABASE_PASSWORD: ${MYSQL_PASSWORD}
+      DATABASE_NAME: ${MYSQL_DATABASE}
+    depends_on:
+      - mysql
 
 volumes:
   mysql-data:
