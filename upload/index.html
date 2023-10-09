@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Drag and Drop Video Upload</title>
+        <!-- Add Bootstrap CSS (you can replace this with a CDN link) -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <style>
+        /* Custom styles for the drop zone */
+        .drop-zone {
+            border: 2px dashed #cccccc;
+            border-radius: 5px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* Highlight the drop zone when dragging a file over it */
+        .drop-zone.dragover {
+            border-color: #007bff;
+        }
+
+        /* Style for uploaded files list */
+        .uploaded-files {
+            list-style-type: none;
+        }
+
+        /* Style for delete buttons */
+        .delete-button {
+            cursor: pointer;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container mt-5">
+            <h2>Drag and Drop Video Upload</h2>
+            <div class="row mt-4">
+                <div class="col-md-6 offset-md-3">
+                    <div class="drop-zone" id="dropZone" onclick="openFileDialog()">
+                        <p>Click or drag and drop video files here</p>
+                    </div>
+                    <input
+                        type="file"
+                        id="fileInput"
+                        accept="video/*"
+                        multiple
+                        style="display: none;"
+                    >
+                    <ul class="uploaded-files mt-3" id="fileList"></ul>
+                </div>
+            </div>
+        </div>
+        <!-- Add Bootstrap JS (you can replace this with a CDN link) -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+
+        // Prevent the default behavior of the drop zone
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        // Revert the style when the file is no longer dragged over the drop zone
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        // Handle file drop
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+
+            for (const file of files) {
+                if (isVideoFile(file)) {
+                    displayFile(file);
+                } else {
+                    alert(`File '${file.name}' is not a valid video file.`);
+                }
+            }
+        });
+
+        // Handle file input change
+        fileInput.addEventListener('change', () => {
+            const files = fileInput.files;
+
+            for (const file of files) {
+                if (isVideoFile(file)) {
+                    displayFile(file);
+                } else {
+                    alert(`File '${file.name}' is not a valid video file.`);
+                }
+            }
+        });
+
+        // Open file dialog when the drop zone is clicked
+        function openFileDialog() {
+            fileInput.click();
+        }
+
+        // Display uploaded files
+        function displayFile(file) {
+            const listItem = document.createElement('li');
+            const deleteButton = document.createElement('span');
+
+            listItem.textContent = file.name;
+            deleteButton.innerHTML = '&#10006;'; // "x" symbol
+
+            // Add a click event to delete the file when the "x" button is clicked
+            deleteButton.classList.add('delete-button');
+            deleteButton.addEventListener('click', () => {
+                listItem.remove();
+            });
+
+            listItem.appendChild(deleteButton);
+            fileList.appendChild(listItem);
+        }
+
+        // Check if a file is a video
+        function isVideoFile(file) {
+            const acceptedVideoTypes = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo'];
+            return acceptedVideoTypes.includes(file.type);
+        }
+        </script>
+    </body>
+</html>
