@@ -1,11 +1,27 @@
 version: '3.7'
 services:
+  stream:
+    build:
+      context: ./stream
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - filesystem
+      - mysql
+    environment:
+      DATABASE_HOST: mysql
+      DATABASE_USER: ${MYSQL_USER}
+      DATABASE_PASSWORD: ${MYSQL_PASSWORD}
+      DATABASE_NAME: ${MYSQL_DATABASE}
   authentication:
     build:
       context: ./auth
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
+    environment:
+      SERVICE_URL: http://localhost:8080
   mysql:
     build:
       context: ./database
@@ -30,8 +46,17 @@ services:
       DATABASE_USER: ${MYSQL_USER}
       DATABASE_PASSWORD: ${MYSQL_PASSWORD}
       DATABASE_NAME: ${MYSQL_DATABASE}
+      FILESYSTEM_URL: http://filesystem:8100
     depends_on:
       - mysql
-
+  filesystem:
+    build:
+      context: ./filesystem
+      dockerfile: Dockerfile
+    ports:
+      - "8100:8100"
+    volumes:
+      - file-data:/app/uploads
 volumes:
   mysql-data:
+  file-data:

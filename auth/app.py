@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request, make_response, redirect, url_for
 import hashlib
 import json
-import jwt
-import datetime
+import os
+SERVICE_URL = os.environ.get("SERVICE_URL")
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "jwt-secret-key"
+
 
 with open("users.json") as f:
     users = json.load(f)
@@ -26,10 +26,7 @@ def login():
 
         # check that the password and username are correct
         if username in usernames and hashed_password in passes:
-            token = jwt.encode({'username': username, 'exp': datetime.datetime.utcnow(
-            ) + datetime.timedelta(minutes=10)}, app.config['SECRET_KEY'], algorithm='HS256')
-            response = make_response(redirect("http://localhost:8090"))
-            response.set_cookie("token", token, httponly=True)
+            response = make_response(redirect(SERVICE_URL))
             return response
         else:
             return render_template("login.html", error=True)

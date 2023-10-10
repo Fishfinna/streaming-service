@@ -1,72 +1,127 @@
 const express = require("express");
-const multer = require("multer");
 const path = require("path");
 const mysql = require("mysql2");
 const app = express();
+const axios = require("axios");
+const multer = require("multer");
+const FormData = require("form-data");
+const upload = multer();
 const port = 8090;
-
+const fileSystemURL = process.env.FILESYSTEM_URL || "http://localhost:8100";
 app.use(express.static(path.join(__dirname, "/public")));
 
+// database connection
 function createDBConnection() {
-  const db = mysql.createConnection({
-    host: process.env.DATABASE_HOST,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE_NAME,
-  });
+  const maxRetries = 20;
+  let retries = 0;
+  const retryInterval = 2000;
 
-  db.connect((err) => {
-    if (err) {
-      console.error("Error connecting to the database:", err);
-      return;
-    }
-    console.log("Connected to the database");
-  });
+  const connectWithRetry = () => {
+    const db = mysql.createPool({
+      host: process.env.DATABASE_HOST,
+      user: process.env.DATABASE_USER,
+      password: process.env.DATABASE_PASSWORD,
+      database: process.env.DATABASE_NAME,
+      connectionLimit: 50,
+    });
+    db.getConnection((err) => {
+      if (err) {
+        if (retries < maxRetries) {
+          retries++;
+          console.error(
+            `Error connecting to the database, attempting to reconnect... (Retry ${retries})`
+          );
+          setTimeout(connectWithRetry, retryInterval);
+        } else {
+          console.error(
+            "Max retries reached. Unable to connect to the database."
+          );
+          return;
+        }
+      } else {
+        console.log("Connected to the database");
+      }
+    });
+    return db;
+  };
 
-  return db;
+  return connectWithRetry();
 }
 
-setTimeout(() => {
-  const db = createDBConnection();
+const db = createDBConnection();
 
-  // this should be swapped out with a connection to the filesystem instead
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, "uploads/");
-    },
-    filename: (req, file, cb) => {
-      cb(
-        null,
-        `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
-      );
-    },
+app.post("/upload", upload.array("videos"), async (req, res) => {
+  const insertQueries = req.files.map((file) => {
+    const title = file.originalname;
+    const path = `http://localhost:8100/uploads/${title}`;
+
+    const insertQuery = "INSERT INTO videos (title, path) VALUES (?, ?)";
+    const insertValues = [title, path];
+
+    return { query: insertQuery, values: insertValues };
   });
 
-  const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
-
-  app.post("/upload", upload.array("videos"), (req, res) => {
-    req.files.forEach((file) => {
-      const title = file.filename;
-      const path = `http://localhost:8100/uploads/${title}`;
-
-      const insertQuery = "INSERT INTO videos (title, path) VALUES (?, ?)";
-
-      db.query(insertQuery, [title, path], (err, results) => {
-        if (err) {
-          console.error("Error inserting data into the database:", err);
-          return res.status(500).send("Error inserting data into the database");
-        }
-
-        console.log(
-          `File "${title}" inserted into the database with URL "${path}"`
-        );
+  // forward to the filesystem
+  try {
+    for (const file of req.files) {
+      const formData = new FormData();
+      console.log({ file: file.originalname });
+      formData.append("videos", file.buffer, {
+        filename: file.originalname,
       });
-    });
 
-    res.sendFile(path.join(__dirname, "/public/upload.html"));
-  });
+      await axios.post(`${fileSystemURL}/upload`, formData, {
+        headers: {
+          ...formData.getHeaders(),
+        },
+      });
+    }
 
-  app.listen(port, () => {
-    console.log(`Server is listening at http://localhost:${port}`);
+    console.log("Files forwarded to the second application.");
+  } catch (error) {
+    console.error("Error forwarding files:", error);
+    return res
+      .status(500)
+      .send("Error forwarding files to the second application");
+  }
+
+  // write to the database
+  db.getConnection((err, connection) => {
+    if (err) {
+      console.error("Error getting database connection:", err);
+      return res.status(500).send("Error getting database connection");
+    }
+
+    Promise.all(
+      insertQueries.map(({ query, values }) => {
+        return new Promise((resolve, reject) => {
+          connection.query(query, values, (queryErr, results) => {
+            if (queryErr) {
+              console.error(
+                "Error inserting data into the database:",
+                queryErr
+              );
+              reject(queryErr);
+            } else {
+              resolve(results);
+            }
+          });
+        });
+      })
+    )
+      .then(() => {
+        connection.release();
+        console.log("Files inserted into the database.");
+        res.sendFile(path.join(__dirname, "/public/upload.html"));
+      })
+      .catch((error) => {
+        connection.release();
+        console.error("Error inserting data into the database:", error);
+        res.status(500).send("Error inserting data into the database");
+      });
   });
-}, 10000); // 10 seconds timeout so that the mysql database has a chance to get going before we try to connect
+});
+
+app.listen(port, () => {
+  console.log(`Server is listening at http://localhost:${port}`);
+});
