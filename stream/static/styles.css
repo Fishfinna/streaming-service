@@ -51,3 +51,7 @@ body {
     background-color: transparent;
     border: none;
 }
+
+video {
+    border-radius: 20px;
+}
